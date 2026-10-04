@@ -25,7 +25,10 @@ export class CsrfController {
           return originalFetch(input, init);
         };
         document.addEventListener('submit', async (event) => {
-          const form = event.target; if (!(form instanceof HTMLFormElement) || form.dataset.csrfBound) return;
+          const form = event.target;
+          // AdminJS record/filter forms are handled by React and fetch interception above.
+          // Only the server-rendered login form needs a hidden token and native submission.
+          if (!(form instanceof HTMLFormElement) || !form.action.endsWith('/admin/login') || form.dataset.csrfBound) return;
           event.preventDefault(); form.dataset.csrfBound = 'true';
           const field = document.createElement('input'); field.type = 'hidden'; field.name = '_csrf'; field.value = await getToken(); form.appendChild(field); form.submit();
         }, true);

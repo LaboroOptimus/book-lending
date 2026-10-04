@@ -1,4 +1,5 @@
-import { BasePropertyProps, Box, Label, Text } from 'adminjs';
+import { BasePropertyProps } from 'adminjs';
+import { Box, Label, Text } from '@adminjs/design-system';
 import React, { useState } from 'react';
 
 export const CoverUpload = ({ property, record, onChange }: BasePropertyProps) => {
