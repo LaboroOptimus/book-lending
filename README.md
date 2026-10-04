@@ -3,6 +3,15 @@
 A compact library administration application built for the Engineer Take-Home task.
 It uses NestJS, AdminJS, Prisma, PostgreSQL, and Cloudinary.
 
+## Live demo
+
+- Application: [https://book-lending-szj4.onrender.com/](https://book-lending-szj4.onrender.com/)
+- Admin: [https://book-lending-szj4.onrender.com/admin](https://book-lending-szj4.onrender.com/admin)
+- Health check: [https://book-lending-szj4.onrender.com/health](https://book-lending-szj4.onrender.com/health)
+- Source: [LaboroOptimus/book-lending](https://github.com/LaboroOptimus/book-lending)
+
+The free Render instance can take a short time to wake after inactivity.
+
 ## What it does
 
 - Manage books, authors, members, loans, and staff accounts through AdminJS at `/admin`.
@@ -27,6 +36,15 @@ under concurrent requests.
 AdminJS was chosen because the assignment specifically asks for framework-generated
 administration rather than a hand-built CRUD frontend. NestJS keeps the application
 structure familiar, while Prisma provides typed schema migrations and a focused data layer.
+
+## Security and access
+
+- Passwords are hashed with bcrypt; plaintext passwords are never persisted.
+- Sessions are stored in PostgreSQL and use `httpOnly`, `sameSite=lax` cookies.
+- State-changing requests use CSRF protection.
+- Only administrators can manage the catalogue, staff accounts, and cover uploads.
+  Librarians can work with members and loans only.
+- Cover uploads accept JPEG, PNG, and WebP files up to 5 MB and stream directly to Cloudinary.
 
 ## Local setup
 
@@ -88,8 +106,9 @@ that is already checked out.
 4. Enter all values marked `sync: false` in Render. Use the Neon URL for `DATABASE_URL`.
 5. Render builds the Docker image, applies committed Prisma migrations at startup, and serves
    the application over HTTPS. The health endpoint is `/health`.
-6. Run `npm run seed` once through the Render shell with the seed passwords set, then sign in
-   through `/admin`.
+6. Run `npm run seed` once against the Neon database with the seed passwords set, then sign in
+   through `/admin`. On plans without Render Shell, temporarily use the Neon `DATABASE_URL`
+   in a local `.env` to run the command.
 
 The production container runs `prisma migrate deploy`, not `prisma migrate dev`, so it only
 applies migrations that are already committed to the repository.
@@ -101,3 +120,9 @@ applies migrations that are already committed to the repository.
 - The app has no public catalogue API or customer-facing interface because the scope is the
   operational admin workflow.
 - The seed is intentionally additive/idempotent rather than a destructive database reset.
+
+## With more time
+
+- Model physical book copies instead of treating one book record as one lendable copy.
+- Add audit history for changes to loans and staff-managed records.
+- Add OAuth login and a lightweight public catalogue/search page.
