@@ -39,7 +39,7 @@ model Book {
 
 model Author {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
   biography String?
   books     Book[]
   createdAt DateTime @default(now())

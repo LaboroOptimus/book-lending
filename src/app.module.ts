@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { createAdminModule } from './admin/admin.module';
 import { LoansModule } from './loans/loans.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SecurityModule } from './security/security.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -15,11 +17,16 @@ import { SecurityModule } from './security/security.module';
         PORT: Joi.number().port().default(3000),
         SESSION_SECRET: Joi.string().min(32).required(),
         CSRF_SECRET: Joi.string().min(32).required(),
+        CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+        CLOUDINARY_API_KEY: Joi.string().required(),
+        CLOUDINARY_API_SECRET: Joi.string().required(),
       }),
     }),
     PrismaModule,
     LoansModule,
     SecurityModule,
+    createAdminModule(),
+    UploadsModule,
   ],
 })
 export class AppModule {}
