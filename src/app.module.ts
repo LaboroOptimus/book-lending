@@ -2,12 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { createAdminModule } from './admin/admin.module';
+import { AppController } from './app.controller';
 import { LoansModule } from './loans/loans.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SecurityModule } from './security/security.module';
 import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,

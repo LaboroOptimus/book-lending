@@ -16,10 +16,12 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy"
   },
-  "prisma": { "seed": "ts-node prisma/seed.ts" },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@adminjs/express": "^6.1.1",
-    "@adminjs/nestjs": "^7.0.0",
+    "@adminjs/nestjs": "^6.1.0",
     "@adminjs/prisma": "^5.0.4",
     "@nestjs/common": "^10.4.15",
     "@nestjs/config": "^3.3.0",

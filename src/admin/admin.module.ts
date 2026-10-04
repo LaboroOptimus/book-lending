@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import path from 'path';
 import { AuthService, AdminResource } from '../auth/auth.service';
+import { LoansModule } from '../loans/loans.module';
 import { LoansService } from '../loans/loans.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -11,6 +12,7 @@ const loadEsm = new Function('moduleName', 'return import(moduleName)') as (
 
 export function createAdminModule(): Promise<any> {
   return loadEsm('@adminjs/nestjs').then(({ AdminModule }) => AdminModule.createAdminAsync({
+    imports: [LoansModule],
     inject: [PrismaService, AuthService, LoansService, ConfigService],
     useFactory: async (
       prisma: PrismaService,

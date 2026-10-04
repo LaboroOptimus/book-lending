@@ -2,9 +2,15 @@ import * as bcrypt from 'bcrypt';
 import { PrismaClient, UserRole } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const adminPassword = process.env.SEED_ADMIN_PASSWORD;
-const librarianPassword = process.env.SEED_LIBRARIAN_PASSWORD;
-if (!adminPassword || !librarianPassword) throw new Error('Set SEED_ADMIN_PASSWORD and SEED_LIBRARIAN_PASSWORD before running the seed.');
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name} before running the seed.`);
+  return value;
+}
+
+const adminPassword = requiredEnv('SEED_ADMIN_PASSWORD');
+const librarianPassword = requiredEnv('SEED_LIBRARIAN_PASSWORD');
 
 const authorNames = ['Maya Angelou', 'James Baldwin', 'Octavia E. Butler', 'Italo Calvino', 'Joan Didion', 'Ursula K. Le Guin', 'Toni Morrison', 'Haruki Murakami', 'George Orwell', 'Virginia Woolf'];
 
