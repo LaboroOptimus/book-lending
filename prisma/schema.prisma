@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  LIBRARIAN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(LIBRARIAN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Book {
+  id            String   @id @default(cuid())
+  title         String
+  isbn          String   @unique
+  publishedYear Int?
+  description   String?
+  coverImageUrl String?
+  coverImageKey String?
+  authors       Author[]
+  loans         Loan[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([title])
+}
+
+model Author {
+  id        String   @id @default(cuid())
+  name      String
+  biography String?
+  books     Book[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String   @unique
+  phone     String?
+  joinedAt  DateTime @default(now())
+  loans     Loan[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fullName])
+}
+
+model Loan {
+  id         String    @id @default(cuid())
+  bookId     String
+  memberId   String
+  loanedAt   DateTime  @default(now())
+  dueDate    DateTime
+  returnedAt DateTime?
+  book       Book      @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  member     Member    @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([bookId])
+  @@index([memberId])
+  @@index([dueDate])
+}
