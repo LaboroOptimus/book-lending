@@ -69,12 +69,18 @@ Open `http://localhost:3000/admin`.
 
 The seed is safe to rerun: it creates or updates its named demo records and does not remove
 unrelated database data. It needs `SEED_ADMIN_PASSWORD` and `SEED_LIBRARIAN_PASSWORD`.
-Use the credentials below after seeding:
+
+## Demo credentials
+
+Use these accounts to review the deployed admin at `/admin`:
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Administrator | `admin@book-lending.test` | `SEED_ADMIN_PASSWORD` |
-| Librarian | `librarian@book-lending.test` | `SEED_LIBRARIAN_PASSWORD` |
+| Administrator | `admin@book-lending.test` | `AdminLibrary2026!` |
+| Librarian | `librarian@book-lending.test` | `LibrarianLibrary2026!` |
+
+These are demo-only credentials. For a separate deployment, set different non-committed
+`SEED_ADMIN_PASSWORD` and `SEED_LIBRARIAN_PASSWORD` values before running the seed.
 
 ## Environment variables
 
