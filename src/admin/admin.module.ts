@@ -36,6 +36,10 @@ export function createAdminModule(): Promise<any> {
         'CoverUpload',
         path.join(process.cwd(), 'src/admin/components/cover-upload'),
       );
+      componentLoader.override(
+        'SelectedRecords',
+        path.join(process.cwd(), 'src/admin/components/selected-records'),
+      );
       const canManage = (resource: AdminResource) => ({ currentAdmin }: any) =>
         Boolean(currentAdmin && authService.canManage(currentAdmin.role as UserRole, resource));
       const model = (name: string) => ({ model: prismaAdapter.getModelByName(name), client: prisma });
