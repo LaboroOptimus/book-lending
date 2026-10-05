@@ -77,11 +77,30 @@ export function createAdminModule(): Promise<any> {
               resource: model('Loan'),
               options: {
                 navigation: 'Circulation',
-                listProperties: ['bookId', 'memberId', 'loanedAt', 'dueDate', 'returnedAt'],
-                filterProperties: ['bookId', 'memberId', 'dueDate', 'returnedAt'],
+                listProperties: ['book', 'member', 'loanedAt', 'dueDate', 'returnedAt'],
+                filterProperties: ['book', 'member', 'dueDate', 'returnedAt'],
                 properties: { createdAt: { isVisible: false }, updatedAt: { isVisible: false } },
                 actions: {
-                  list: { isAccessible: canManage('Loan') }, show: { isAccessible: canManage('Loan') }, new: { isAccessible: canManage('Loan') }, edit: { isAccessible: canManage('Loan') }, delete: { isAccessible: canManage('Loan') },
+                  list: { isAccessible: canManage('Loan') }, show: { isAccessible: canManage('Loan') },
+                  new: {
+                    isAccessible: canManage('Loan'),
+                    before: async (request: any) => {
+                      if (request.method !== 'post') return request;
+                      const bookId = request.payload?.book ?? request.payload?.bookId;
+                      const loanedAt = new Date(request.payload?.loanedAt);
+                      const dueDate = new Date(request.payload?.dueDate);
+                      const errors: Record<string, { message: string }> = {};
+                      if (bookId && await prisma.loan.findFirst({ where: { bookId, returnedAt: null }, select: { id: true } })) {
+                        errors.book = { message: 'This book is already on loan. Return its active loan before lending it again.' };
+                      }
+                      if (Number.isNaN(dueDate.getTime()) || dueDate <= loanedAt) {
+                        errors.dueDate = { message: 'The due date must be after the loan date.' };
+                      }
+                      if (Object.keys(errors).length) throw new adminjs.ValidationError(errors);
+                      return request;
+                    },
+                  },
+                  edit: { isAccessible: canManage('Loan') }, delete: { isAccessible: canManage('Loan') },
                   markReturned: {
                     actionType: 'bulk',
                     label: 'Mark selected loans as returned',
