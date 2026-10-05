@@ -105,11 +105,17 @@ export function createAdminModule(): Promise<any> {
                     actionType: 'bulk',
                     label: 'Mark selected loans as returned',
                     isAccessible: canManage('Loan'),
-                    handler: async (request: any) => {
-                      const ids = request.payload?.recordIds ?? [];
+                    handler: async (request: any, _response: any, context: any) => {
+                      const requestedIds = request.payload?.recordIds ?? request.query?.recordIds;
+                      const ids = context.records?.map((record: any) => record.id())
+                        ?? (Array.isArray(requestedIds) ? requestedIds : requestedIds ? [requestedIds] : []);
                       const results = await Promise.allSettled(ids.map((id: string) => loansService.returnLoan(id)));
                       const returned = results.filter((result) => result.status === 'fulfilled').length;
-                      return { notice: { message: `Marked ${returned} loan(s) as returned.`, type: 'success' }, records: [] };
+                      return {
+                        redirectUrl: context.h.resourceUrl({ resourceId: context.resource.id() }),
+                        notice: { message: `Marked ${returned} loan(s) as returned.`, type: 'success' },
+                        records: [],
+                      };
                     },
                   },
                 },
