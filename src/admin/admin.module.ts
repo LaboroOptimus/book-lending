@@ -40,11 +40,53 @@ export function createAdminModule(): Promise<any> {
         'SelectedRecords',
         path.join(process.cwd(), 'src/admin/components/selected-records'),
       );
+      componentLoader.override(
+        'FilterDrawer',
+        path.join(process.cwd(), 'src/admin/components/filter-drawer'),
+      );
       const canManage = (resource: AdminResource) => ({ currentAdmin }: any) =>
         Boolean(currentAdmin && authService.canManage(currentAdmin.role as UserRole, resource));
       const model = (name: string) => ({ model: prismaAdapter.getModelByName(name), client: prisma });
       const PgSession = connectPgSimple(session);
       const isProduction = config.getOrThrow('NODE_ENV') === 'production';
+      const getAuthorIds = (payload: Record<string, unknown> = {}): string[] => {
+        if (payload.authorIds === '__FORM_VALUE_EMPTY_ARRAY__') return [];
+        if (Array.isArray(payload.authorIds)) return payload.authorIds.filter((id): id is string => typeof id === 'string');
+
+        return Object.entries(payload)
+          .filter(([key, value]) => key.startsWith('authorIds.') && typeof value === 'string')
+          .sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }))
+          .map(([, value]) => value as string);
+      };
+      const captureAuthorIds = async (request: any) => {
+        if (request.method === 'post') {
+          request.payload.__authorIds = getAuthorIds(request.payload);
+        }
+        return request;
+      };
+      const syncBookAuthors = async (response: any, request: any) => {
+        const bookId = response.record?.id;
+        if (!bookId) return response;
+
+        if (request.method === 'post') {
+          const authorIds = request.payload.__authorIds as string[];
+          await prisma.book.update({
+            where: { id: bookId },
+            data: { authors: { set: authorIds.map((id) => ({ id })) } },
+          });
+        }
+
+        const authors = await prisma.author.findMany({
+          where: { books: { some: { id: bookId } } },
+          orderBy: { name: 'asc' },
+          select: { id: true },
+        });
+        response.record.params = {
+          ...response.record.params,
+          ...Object.fromEntries(authors.map((author, index) => [`authorIds.${index}`, author.id])),
+        };
+        return response;
+      };
 
       return {
         adminJsOptions: {
@@ -61,12 +103,34 @@ export function createAdminModule(): Promise<any> {
                 filterProperties: ['title', 'isbn', 'publishedYear'],
                 searchProperties: ['title', 'isbn'],
                 properties: {
+                  authorIds: {
+                    type: 'string',
+                    isArray: true,
+                    reference: 'Author',
+                    label: 'Authors',
+                    position: 30,
+                    isVisible: { list: false, filter: false, show: false, edit: true },
+                  },
                   coverImageUrl: { components: { edit: coverUpload, new: coverUpload }, isVisible: { list: false, filter: false, show: true, edit: true } },
                   coverImageKey: { isVisible: false },
                   createdAt: { isVisible: false },
                   updatedAt: { isVisible: false },
                 },
-                actions: { list: { isAccessible: canManage('Book') }, show: { isAccessible: canManage('Book') }, new: { isAccessible: canManage('Book') }, edit: { isAccessible: canManage('Book') }, delete: { isAccessible: canManage('Book') } },
+                actions: {
+                  list: { isAccessible: canManage('Book') },
+                  show: { isAccessible: canManage('Book') },
+                  new: {
+                    isAccessible: canManage('Book'),
+                    before: captureAuthorIds,
+                    after: syncBookAuthors,
+                  },
+                  edit: {
+                    isAccessible: canManage('Book'),
+                    before: captureAuthorIds,
+                    after: syncBookAuthors,
+                  },
+                  delete: { isAccessible: canManage('Book') },
+                },
               },
             },
             {
