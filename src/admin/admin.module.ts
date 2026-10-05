@@ -104,6 +104,9 @@ export function createAdminModule(): Promise<any> {
                   markReturned: {
                     actionType: 'bulk',
                     label: 'Mark selected loans as returned',
+                    // Run the request directly from the list. Without this AdminJS opens
+                    // a dedicated bulk-action route before it can display the notice.
+                    component: false,
                     isAccessible: canManage('Loan'),
                     handler: async (request: any, _response: any, context: any) => {
                       const requestedIds = request.payload?.recordIds ?? request.query?.recordIds;
@@ -117,11 +120,6 @@ export function createAdminModule(): Promise<any> {
                       )).length;
 
                       return {
-                        // AdminJS needs an action URL here. A resource URL alone is not a client-side route.
-                        redirectUrl: context.h.resourceActionUrl({
-                          resourceId: context.resource.id(),
-                          actionName: 'list',
-                        }),
                         notice: returned > 0
                           ? {
                               message: alreadyReturned > 0
