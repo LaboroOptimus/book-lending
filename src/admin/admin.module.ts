@@ -1,5 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
+import connectPgSimple from 'connect-pg-simple';
+import session from 'express-session';
 import path from 'path';
 import { AuthService, AdminResource } from '../auth/auth.service';
 import { LoansModule } from '../loans/loans.module';
@@ -37,6 +39,8 @@ export function createAdminModule(): Promise<any> {
       const canManage = (resource: AdminResource) => ({ currentAdmin }: any) =>
         Boolean(currentAdmin && authService.canManage(currentAdmin.role as UserRole, resource));
       const model = (name: string) => ({ model: prismaAdapter.getModelByName(name), client: prisma });
+      const PgSession = connectPgSimple(session);
+      const isProduction = config.getOrThrow('NODE_ENV') === 'production';
 
       return {
         adminJsOptions: {
@@ -104,10 +108,15 @@ export function createAdminModule(): Promise<any> {
           cookiePassword: config.getOrThrow('SESSION_SECRET'),
         },
         sessionOptions: {
+          store: new PgSession({
+            conString: config.getOrThrow('DATABASE_URL'),
+            tableName: 'user_session',
+            createTableIfMissing: true,
+          }),
           secret: config.getOrThrow('SESSION_SECRET'),
           resave: false,
           saveUninitialized: false,
-          cookie: { httpOnly: true, sameSite: 'lax', secure: config.getOrThrow('NODE_ENV') === 'production', maxAge: 8 * 60 * 60 * 1000 },
+          cookie: { httpOnly: true, sameSite: 'lax', secure: isProduction, maxAge: 8 * 60 * 60 * 1000 },
         },
       };
     },
