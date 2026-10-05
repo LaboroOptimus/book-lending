@@ -104,7 +104,7 @@ export function createAdminModule(): Promise<any> {
         },
         auth: {
           authenticate: (email: string, password: string) => authService.validateCredentials(email, password),
-          cookieName: 'book-lending.sid',
+          cookieName: isProduction ? '__Host-book-lending.sid' : 'book-lending.sid',
           cookiePassword: config.getOrThrow('SESSION_SECRET'),
         },
         sessionOptions: {
