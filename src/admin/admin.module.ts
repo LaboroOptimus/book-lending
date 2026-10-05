@@ -111,9 +111,32 @@ export function createAdminModule(): Promise<any> {
                         ?? (Array.isArray(requestedIds) ? requestedIds : requestedIds ? [requestedIds] : []);
                       const results = await Promise.allSettled(ids.map((id: string) => loansService.returnLoan(id)));
                       const returned = results.filter((result) => result.status === 'fulfilled').length;
+                      const alreadyReturned = results.filter((result) => (
+                        result.status === 'rejected'
+                        && String(result.reason?.message ?? '').includes('already been returned')
+                      )).length;
+
                       return {
-                        redirectUrl: context.h.resourceUrl({ resourceId: context.resource.id() }),
-                        notice: { message: `Marked ${returned} loan(s) as returned.`, type: 'success' },
+                        // AdminJS needs an action URL here. A resource URL alone is not a client-side route.
+                        redirectUrl: context.h.resourceActionUrl({
+                          resourceId: context.resource.id(),
+                          actionName: 'list',
+                        }),
+                        notice: returned > 0
+                          ? {
+                              message: alreadyReturned > 0
+                                ? `Returned ${returned} loan(s). ${alreadyReturned} selected loan(s) had already been returned.`
+                                : returned === 1
+                                  ? 'Book returned successfully.'
+                                  : `Returned ${returned} loans successfully.`,
+                              type: 'success',
+                            }
+                          : {
+                              message: alreadyReturned > 0
+                                ? 'The selected loan has already been returned.'
+                                : 'No loans were returned.',
+                              type: 'error',
+                            },
                         records: [],
                       };
                     },
